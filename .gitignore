@@ -1,4 +1,7 @@
 .env
-.venv/
 monitoring_bot.session
+monitoring_bot.session-journal
+
+.venv/
 app/storage/config.py
+app/storage/pattern.json

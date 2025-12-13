@@ -1,7 +1,8 @@
 import json
 
-# Чтение JSON файла и возврат данных
 async def read_json(file_path):
+    """Функция для чтения данных из JSON файла"""
+    
     try:
         # Открытие и чтение JSON файла
         with open(file_path, 'r', encoding='utf-8') as file:
