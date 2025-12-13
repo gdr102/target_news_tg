@@ -1,5 +1,6 @@
 from telethon import TelegramClient
 
+from app.functions.other import link_author
 from app.functions.read_json import read_json
 from app.functions.write_json import write_json
 
@@ -13,8 +14,8 @@ async def add_keyword_handler(client, event, target_channel_id):
         if keyword == "":
             await client.send_message(
                 entity=target_channel_id,
-                message=("Пожалуйста, укажите ключевое слово после команды.\n"
-                         "Пример: /add_keyword \"слово\"")
+                message=('Пожалуйста, укажите ключевое слово после команды.\n'
+                         'Пример: /add_keyword \"слово\"')
             )
 
             return  # Пустое ключевое слово, выходим из функции
@@ -26,7 +27,7 @@ async def add_keyword_handler(client, event, target_channel_id):
             if kw.lower() == keyword.lower():
                 await client.send_message(
                     entity=target_channel_id,
-                    message=f"Ключевое слово '{keyword}' уже существует."
+                    message=f'Ключевое слово \"{keyword}\" уже существует.'
                 )
 
                 return  # Ключевое слово уже существует, выходим из функции
@@ -36,14 +37,18 @@ async def add_keyword_handler(client, event, target_channel_id):
 
         await write_json(file_path='app/storage/pattern.json', data=pattern) # Сохраняем обновленный шаблон обратно в JSON файл
 
+        user = await link_author(client, event.sender_id)
+
         await client.send_message(
             entity=target_channel_id,
-            message=f"Новое ключевое слово успешно добавлено: {keyword}"
+            message=f'Пользователь {user} добавил новое ключевое слово: \"<code>{keyword}</code>\"',
+            parse_mode='html',
+            link_preview=False
         )
 
     except Exception as e:
-        print(f"Ошибка при обработке команды /add_keyword: {e}")
+        print(f'Ошибка при обработке команды /add_keyword: {e}')
         await client.send_message(
             entity=target_channel_id,
-            message="Произошла ошибка при добавлении нового ключевого слова."
+            message='Произошла ошибка при добавлении нового ключевого слова.'
         )

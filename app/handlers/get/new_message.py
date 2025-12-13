@@ -44,9 +44,10 @@ async def new_message_hanlder(client: TelegramClient, event, target_channel_id: 
                         if ('protected' in err_text and 'forward' in err_text) or 'you can\'t forward' in err_text:
                             try:
                                 source = f"{event.chat.title}"
+                                chat_id = str(event.chat_id).replace('-100', '')
 
                                 if event.chat.username is None:
-                                    source = f"<a href=\"https://t.me/c/{event.chat_id}/{message.id}\">{event.chat.title}</a> - приватный канал"
+                                    source = f"<a href=\"https://t.me/c/{chat_id}/{message.id}\">{event.chat.title}</a> - приватный канал"
                                 else:
                                     source = f"<a href=\"https://t.me/{event.chat.username}/{message.id}\">{event.chat.title}</a> - открытый канал"
 

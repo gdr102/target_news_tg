@@ -1,6 +1,6 @@
 from telethon import TelegramClient
 
-async def get_sources_handler(client: TelegramClient, target_channel_id: int):
+async def get_sources_handler(client: TelegramClient, event, target_channel_id: int):
     """Обработчик команды /sources для получения списка источников"""
 
     try:
@@ -11,7 +11,7 @@ async def get_sources_handler(client: TelegramClient, target_channel_id: int):
             # Более точная проверка на канал/супергруппу
             if hasattr(dialog.entity, 'broadcast') and dialog.entity.broadcast:
                 channel_id = dialog.entity.id # ID канала
-                username = f"@{dialog.entity.username}" if dialog.entity.username else f"https://t.me/c/{channel_id}" # Юзернейм или ссылка на канал
+                username = f"@{dialog.entity.username}" if dialog.entity.username else f'https://t.me/c/{channel_id}' # Юзернейм или ссылка на канал
 
                 # Сохраняем информацию о канале
                 channels[channel_id] = {
@@ -24,12 +24,12 @@ async def get_sources_handler(client: TelegramClient, target_channel_id: int):
         await client.send_message(
             entity=target_channel_id,
             message=f"Список отслеживаемых источников ({len(channels)}):\n" +
-                    "\n".join([f"{i+1}. {info['title']} ({info['username']})" for i, info in enumerate(channels.values())]) or "Нет отслеживаемых каналов."
+                    "\n".join([f"{i+1}. {info['title']} ({info['username']})" for i, info in enumerate(channels.values())]) or 'Нет отслеживаемых каналов.'
         )
-    
+
     except Exception as e:
-        print(f"Ошибка при обработке команды /sources: {e}")
+        print(f'Ошибка при обработке команды /sources: {e}')
         await client.send_message(
             entity=target_channel_id,
-            message="Произошла ошибка при получении списка источников."
+            message='Произошла ошибка при получении списка источников.'
         )
