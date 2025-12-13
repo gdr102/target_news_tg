@@ -1,4 +1,5 @@
 .env
+commands.txt
 monitoring_bot.session
 monitoring_bot.session-journal
 
