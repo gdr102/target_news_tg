@@ -1,0 +1,4 @@
+.env
+.venv/
+monitoring_bot.session
+app/storage/config.py
