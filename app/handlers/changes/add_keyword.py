@@ -1,54 +1,62 @@
 from telethon import TelegramClient
+from app.functions.message import Message
 
 from app.functions.other import link_author
 from app.functions.read_json import read_json
 from app.functions.write_json import write_json
 
-async def add_keyword_handler(client, event, target_channel_id):
+async def add_keyword_handler(client: TelegramClient, msg: Message, event):
     """Обработчик команды /add_keyword для добавления нового ключевого слова"""
 
     try:
-        keyword = event.pattern_match.group(1).strip()  # Получаем ключевое слово из команды
+        raw = event.pattern_match.group(1) if event.pattern_match else None
+        if raw is None:
+            await msg.send(
+                message=('Пожалуйста, укажите ключевое слово после команды.\n'
+                         'Пример: /add_keyword "слово"')
+            )
+            return
+
+        # Нормализация: убираем внешние пробелы и кавычки (", ', `)
+        keyword = raw.strip()
+        if (keyword.startswith('"') and keyword.endswith('"')) or \
+           (keyword.startswith("'") and keyword.endswith("'")) or \
+           (keyword.startswith("`") and keyword.endswith("`")):
+            keyword = keyword[1:-1].strip()
 
         # Проверка на пустое ключевое слово
         if keyword == "":
-            await client.send_message(
-                entity=target_channel_id,
+            await msg.send(
                 message=('Пожалуйста, укажите ключевое слово после команды.\n'
-                         'Пример: /add_keyword \"слово\"')
+                         'Пример: /add_keyword "слово"')
             )
+            return
 
-            return  # Пустое ключевое слово, выходим из функции
+        pattern = await read_json(file_path='app/storage/pattern.json') or {} # Чтение текущих данных
+        keywords = pattern.get('keywords', []) or [] # Получение списка ключевых слов
 
-        pattern = await read_json(file_path='app/storage/pattern.json')  # чтение шаблона из JSON файла
-        keywords = pattern.get('keywords', [])
-
-        for kw in keywords:
-            if kw.lower() == keyword.lower():
-                await client.send_message(
-                    entity=target_channel_id,
-                    message=f'Ключевое слово \"{keyword}\" уже существует.'
+        # Проверка на дубликат (регистронезависимо)
+        lower = keyword.lower()
+        for kw in keywords: # Проверка существующих ключевых слов
+            if kw.lower() == lower:
+                await msg.send(
+                    message=f'Ключевое слово "{keyword}" уже существует.'
                 )
+                return
 
-                return  # Ключевое слово уже существует, выходим из функции
-        
-        keywords.append(keyword)  # Добавляем новое ключевое слово в список
-        pattern['keywords'] = keywords  # Обновляем словарь с ключевыми словами
+        # Добавляем новое ключевое слово и сохраняем
+        keywords.append(keyword) # Добавление нового ключевого слова
+        pattern['keywords'] = keywords # Обновление данных
+        await write_json(file_path='app/storage/pattern.json', data=pattern) # Сохранение обновленных данных
 
-        await write_json(file_path='app/storage/pattern.json', data=pattern) # Сохраняем обновленный шаблон обратно в JSON файл
+        user = await link_author(client, event.sender_id) # Получение информации об авторе команды
 
-        user = await link_author(client, event.sender_id)
-
-        await client.send_message(
-            entity=target_channel_id,
-            message=f'Пользователь {user} добавил новое ключевое слово: \"<code>{keyword}</code>\"',
-            parse_mode='html',
+        await msg.send(
+            message=f'Пользователь {user} добавил новое ключевое слово: "<code>{keyword}</code>"',
             link_preview=False
         )
 
     except Exception as e:
-        print(f'Ошибка при обработке команды /add_keyword: {e}')
-        await client.send_message(
-            entity=target_channel_id,
-            message='Произошла ошибка при добавлении нового ключевого слова.'
+        await msg.send(
+            message=f'Ошибка при обработке команды /add_keyword: {e}'
         )

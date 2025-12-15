@@ -1,10 +1,10 @@
-from telethon import TelegramClient
-
+from app.functions.message import Message
 from app.functions.read_json import read_json
+from app.functions.other import link_msg_source
 
-async def new_message_hanlder(client: TelegramClient, event, target_channel_id: int):
+async def new_message_hanlder(msg: Message, event):
     """ Обработчик входящих сообщений из каналов"""
-    
+
     try:
         # Проверяем, что сообщения из канала
         if not hasattr(event.chat, 'broadcast') or not event.chat.broadcast:
@@ -26,15 +26,18 @@ async def new_message_hanlder(client: TelegramClient, event, target_channel_id: 
                 if keyword.lower() in text.lower():
                     try:
                         # Не пересылаем в тот же канал
-                        target = target_channel_id
+                        target = msg.target_channel_id
                         if event.chat_id == target:
-                            print("Источник совпадает с целью, пропускаем.")
+                            await msg.send(message='Источник совпадает с целью, пропускаем.', only_log=True)
                             break
 
-                        print(f"Найдено ключевое слово '{keyword}' в тексте поста канала '{getattr(event.chat, 'title', event.chat_id)}'. Пересылаем сообщение...")
+                        # Сообщаем, что обнаружено ключевое слово
+                        await msg.send(
+                            message=f'Обнаружено ключевое слово "<code>{keyword}</code>" в сообщении из канала "{event.chat.title}". Пересылаем сообщение...'
+                        )
 
                         # Попытка прямого пересылания
-                        await client.forward_messages(entity=target, messages=message)
+                        await msg.forward(message=message)
 
                     # Если пересылка не удалась, обрабатываем ошибку
                     except Exception as e:
@@ -43,29 +46,20 @@ async def new_message_hanlder(client: TelegramClient, event, target_channel_id: 
                         # Если сообщение из защищённого чата — нельзя пересылать, пробуем отправить копию
                         if ('protected' in err_text and 'forward' in err_text) or 'you can\'t forward' in err_text:
                             try:
-                                source = f"{event.chat.title}"
-                                chat_id = str(event.chat_id).replace('-100', '')
-
-                                if event.chat.username is None:
-                                    source = f"<a href=\"https://t.me/c/{chat_id}/{message.id}\">{event.chat.title}</a> - приватный канал"
-                                else:
-                                    source = f"<a href=\"https://t.me/{event.chat.username}/{message.id}\">{event.chat.title}</a> - открытый канал"
+                                source = await link_msg_source(event, message.id)
 
                                 # Отправляем только текст
-                                await client.send_message(
-                                    entity=target,
-                                    message=f"{message.message}\n\nИсточник: {source} (запрет на копирование контента)" or "",
-                                    parse_mode='html'
+                                await msg.send(
+                                    message=f'{message.message}\n\nИсточник: {source} (запрет на копирование контента)' or ''
                                 )
-                                print("Сообщение защищено — отправлено копией текста.")
 
-                            except Exception as e2: # Обработка ошибки при отправке копии
-                                print(f"Ошибка при отправке копии сообщения: {e2}")
+                            except Exception as e2: # Ошибка при отправке копии сообщения
+                                await msg.send(message=f'Ошибка при отправке копии сообщения: {e2}')
 
                         else: # Общая ошибка пересылки
-                            print(f"Ошибка при пересылке сообщения: {e}")
+                            await msg.send(message=f'Ошибка при пересылке сообщения: {e}')
 
                     break # Прерываем цикл после первого совпадения
 
     except Exception as e:
-        print(f"Ошибка при обработке сообщения: {e}")
+        await msg.send(message=f'Ошибка при обработке сообщения: {e}')

@@ -1,10 +1,9 @@
-from telethon import TelegramClient
+from app.functions.message import Message
 
-async def get_sources_handler(client: TelegramClient, event, target_channel_id: int):
+async def get_sources_handler(msg: Message, dialogs):
     """Обработчик команды /sources для получения списка источников"""
 
     try:
-        dialogs = await client.get_dialogs() # Получаем все диалоги
         channels = {} # Словарь для хранения информации о каналах
 
         for dialog in dialogs:
@@ -21,15 +20,12 @@ async def get_sources_handler(client: TelegramClient, event, target_channel_id: 
                 }
 
         # Отправляем список каналов в целевой чат
-        await client.send_message(
-            entity=target_channel_id,
+        await msg.send(
             message=f"Список отслеживаемых источников ({len(channels)}):\n" +
                     "\n".join([f"{i+1}. {info['title']} ({info['username']})" for i, info in enumerate(channels.values())]) or 'Нет отслеживаемых каналов.'
         )
 
     except Exception as e:
-        print(f'Ошибка при обработке команды /sources: {e}')
-        await client.send_message(
-            entity=target_channel_id,
+        await msg.send(
             message='Произошла ошибка при получении списка источников.'
         )

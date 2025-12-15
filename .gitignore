@@ -3,7 +3,6 @@ commands.txt
 monitoring_bot.session
 monitoring_bot.session-journal
 
-app/storage/config.py
 app/storage/pattern.json
 
 .venv/
@@ -13,3 +12,4 @@ app/handlers/__pycache__/
 app/handlers/get/__pycache__/
 app/handlers/other/__pycache__/
 app/handlers/changes/__pycache__/
+monitoring_bot1.session

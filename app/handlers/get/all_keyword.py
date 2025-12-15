@@ -1,8 +1,7 @@
-from telethon import TelegramClient
-
+from app.functions.message import Message
 from app.functions.read_json import read_json
 
-async def get_keywords_handler(client: TelegramClient, event, target_channel_id: int):
+async def get_keywords_handler(msg: Message):
     """Обработчик команды /keywords для получения всех ключевых слов"""
     
     pattern = await read_json(file_path='app/storage/pattern.json')  # чтение шаблона из JSON файла
@@ -15,7 +14,4 @@ async def get_keywords_handler(client: TelegramClient, event, target_channel_id:
     else:
         message = 'Ключевые слова не заданы.'
 
-    await client.send_message(
-        entity=target_channel_id,
-        message=message
-    )
+    await msg.send(message=message)
