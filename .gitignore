@@ -13,3 +13,4 @@ app/handlers/get/__pycache__/
 app/handlers/other/__pycache__/
 app/handlers/changes/__pycache__/
 monitoring_bot1.session
+.env copy

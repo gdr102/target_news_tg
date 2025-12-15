@@ -8,7 +8,7 @@ async def get_keywords_handler(msg: Message):
     keywords = pattern.get('keywords', [])
 
     if keywords:
-        keywords_list = '\n'.join(f'- `{kw}`' for kw in keywords if kw)
+        keywords_list = '\n'.join(f'- <code>{kw}</code>' for kw in keywords if kw)
         message = f'Список ключевых слов ({len(keywords)}):\n{keywords_list}'
 
     else:
