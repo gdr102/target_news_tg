@@ -208,7 +208,7 @@ class Actor():
         await write_json('app/storage/posts.json', data_posts)
         
         # Текущее время (можно настроить под ваш часовой пояс)
-        tz = pytz.timezone('Europe/Kiev')  # Украинское время, можно изменить
+        tz = pytz.timezone('Europe/Moscow')  # Украинское время, можно изменить
         now = datetime.now(tz)
         
         # Добавляем интервал для получения времени следующей проверки
@@ -228,3 +228,14 @@ class Actor():
         
         await self.msg.send(message=stats_message)
 
+    async def get_info_page(self, url):
+        run_input = {
+            "urls": [url]
+        }
+
+        run = self.client.actor('cleansyntax/facebook-pages-scraper').call(run_input=run_input)
+
+        dataset = self.client.dataset(run["defaultDatasetId"])
+
+        for item in dataset.iterate_items():
+            return item
