@@ -208,7 +208,7 @@ class Actor():
         await write_json('app/storage/posts.json', data_posts)
         
         # Текущее время (можно настроить под ваш часовой пояс)
-        tz = pytz.timezone('Europe/Kiev')  # Украинское время, можно изменить
+        tz = pytz.timezone('Europe/Moscow')  # Украинское время, можно изменить
         now = datetime.now(tz)
         
         # Добавляем интервал для получения времени следующей проверки
