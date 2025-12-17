@@ -22,6 +22,10 @@ TARGET_CHANNEL_ID = int(os.getenv('TARGET_CHANNEL_ID'))
 TOKEN_APIFY = os.getenv('TOKEN_APIFY')
 INTERVAL_CHECK = int(os.getenv('INTERVAL_CHECK'))
 
+TOPIC_SD = os.getenv('TOPIC_SD')
+TOPIC_TG = os.getenv('TOPIC_TG')
+TOPIC_FB = os.getenv('TOPIC_FB')
+
 # Создаем клиента
 client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
 
@@ -34,14 +38,35 @@ async def main():
     me = await client.get_me()
     print(f"Вы вошли как: {me.first_name} (@{me.username})")
 
-    msg = Message(client, TARGET_CHANNEL_ID)
-    actor = Actor(api_token=TOKEN_APIFY, msg=msg, interval=INTERVAL_CHECK)
-    
+    topics = {
+        'sd': TOPIC_SD, 
+        'tg': TOPIC_TG, 
+        'fb': TOPIC_FB
+    }
+
+    msg = Message(
+        client=client, 
+        target_channel_id=TARGET_CHANNEL_ID, 
+        topics=topics
+    )
+
+    actor = Actor(
+        api_token=TOKEN_APIFY, 
+        msg=msg, 
+        topics=topics, 
+        interval=INTERVAL_CHECK
+    )
+
     # регистрируем обработчики
-    await core_handler(client, events, msg, actor)
+    await core_handler(
+        client=client,
+        events=events, 
+        msg=msg, 
+        actor=actor
+    )
     
     async def handle_check_fb():
-        await msg.send(message='ℹ️ <b>Запускаю проверку Facebook источников...</b>')
+        await msg.send(message='ℹ️ <b>Запускаю проверку Facebook источников...</b>', topic=int(topics.get('fb', '')))
         await actor.run()
 
     # ПОТОМ запускаем периодическую проверку

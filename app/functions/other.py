@@ -19,3 +19,24 @@ async def link_msg_source(event, message_id: int) -> str:
         chat_id_str = str(event.chat_id).replace('-100', '') # удаление префикса -100 для приватных каналов
         return f'<a href=\"https://t.me/c/{chat_id_str}/{message_id}\">{event.chat.title}</a>'
     
+async def check_message_topic(event, msg):
+    message = event.message
+    command = event.pattern_match.group(0)
+    
+    if message.reply_to and message.reply_to.forum_topic:
+        await msg.delete(event.message)
+        
+        if command == '/check_fb':
+            topic_fb = msg.topics.get('fb', '') # ID темы фейсбук
+
+            if int(message.reply_to.reply_to_msg_id) == int(topic_fb):
+                return True
+
+        return False
+    else:
+        if command == '/check_fb':
+            await msg.delete(event.message)
+            return False
+        
+    return True
+
