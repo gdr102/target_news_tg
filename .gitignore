@@ -3,10 +3,14 @@ commands.txt
 monitoring_bot.session
 monitoring_bot.session-journal
 
+app/storage/posts.json
 app/storage/pattern.json
+app/storage/sources_fb.json
+
 
 .venv/
 app/storage/__pycache__/
+app/facebook/__pycache__/
 app/functions/__pycache__/
 app/handlers/__pycache__/
 app/handlers/get/__pycache__/

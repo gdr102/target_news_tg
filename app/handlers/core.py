@@ -1,10 +1,11 @@
 from telethon import TelegramClient
 
+from app.facebook.actor import Actor
 from app.functions.message import Message
 
 from app.handlers.get.new_message import new_message_hanlder
 
-from app.handlers.get.all_channels import get_sources_handler
+from app.handlers.get.all_sources import get_sources_handler
 from app.handlers.changes.add_source import add_source_handler
 from app.handlers.changes.remove_source import remove_source_handler
 
@@ -13,9 +14,8 @@ from app.handlers.changes.add_keyword import add_keyword_handler
 from app.handlers.changes.remove_keyword import remove_keyword_handler
 
 from app.handlers.other.help import help_handler
-from app.handlers.other.unknown import unknown_handler
 
-async def core_handler(client: TelegramClient, events , msg: Message):
+async def core_handler(client: TelegramClient, events, msg: Message, actor: Actor):
     """Основной обработчик"""
 
     target_channel_id = msg.target_channel_id  # Получение целевого канала из объекта Message
@@ -38,7 +38,7 @@ async def core_handler(client: TelegramClient, events , msg: Message):
     async def handle_add_source_command(event):
         dialogs = await client.get_dialogs() # Получаем все диалоги
 
-        await add_source_handler(client, msg, event, dialogs)
+        await add_source_handler(client, msg, event, dialogs, actor)
         await msg.delete(event.message)  # удаление сообщения команды
     
     # Обработчик команды /remove_source для удаления источника
@@ -67,16 +67,21 @@ async def core_handler(client: TelegramClient, events , msg: Message):
         await remove_keyword_handler(client, msg, event)
         await msg.delete(event.message)  # удаление сообщения команды
 
-    @client.on(events.NewMessage(chats=target_channel_id))
-    async def handle_unknown_command(event):
-        commands = ['/sources', '/add_source', '/remove_source', '/keywords', '/add_keyword', '/remove_keyword', '/help']
+    # Обработчик команды /check_fb для принудительной проверки источников фейсбук
+    @client.on(events.NewMessage(chats=target_channel_id, pattern='/check_fb'))
+    async def handle_check_fb_command(event):
+        await msg.send(message='ℹ️ <b>Запускаю проверку Facebook источников...</b>')
 
-        if not any(event.message.message.startswith(cmd) for cmd in commands):
-            await unknown_handler(msg)
-            await msg.delete(event.message)  # удаление сообщения команды
+        await actor.run()
+        
+        await msg.delete(event.message)  # удаление сообщения команды
 
     # Обработчик команды /help для отображения справочной информации
     @client.on(events.NewMessage(chats=target_channel_id, pattern='/help'))
     async def handle_help_command(event):
         await help_handler(msg)   
         await msg.delete(event.message)  # удаление сообщения команды
+
+
+
+

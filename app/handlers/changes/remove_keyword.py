@@ -12,7 +12,12 @@ async def remove_keyword_handler(client: TelegramClient, msg: Message, event):
 		# Извлечение и нормализация ключевого слова из команды
 		raw = event.pattern_match.group(1) if event.pattern_match else None
 		if raw is None:
-			await msg.send(message='Пожалуйста, укажите ключевое слово после команды.\nПример: /remove_keyword "слово"')
+			await msg.send(
+				message=(
+					'❗ Пожалуйста, укажите ключевое слово после команды. ❗\n\n'
+					'Пример: <code>/remove_keyword</code> "слово"'
+				)
+			)
 			return
 
 		keyword = raw.strip() # Убираем внешние пробелы
@@ -24,7 +29,12 @@ async def remove_keyword_handler(client: TelegramClient, msg: Message, event):
 			keyword = keyword[1:-1].strip()
 
 		if keyword == "":
-			await msg.send(message='Пожалуйста, укажите ключевое слово после команды.\nПример: /remove_keyword "слово"')
+			await msg.send(
+				message=(
+					'❗ Пожалуйста, укажите ключевое слово после команды. ❗\n\n'
+					'Пример: <code>/remove_keyword</code> "слово"'
+				)
+			)
 			return
 
 		pattern = await read_json(file_path='app/storage/pattern.json') or {}
@@ -39,7 +49,7 @@ async def remove_keyword_handler(client: TelegramClient, msg: Message, event):
 				break
 
 		if match_index is None:
-			await msg.send(message=f'Ключевое слово "{keyword}" не найдено в списке.')
+			await msg.send(message=f'ℹ️ Ключевое слово "{keyword}" не найдено в списке.')
 			return
 
 		# Удаление найденного ключевого слова и сохранение
@@ -50,9 +60,9 @@ async def remove_keyword_handler(client: TelegramClient, msg: Message, event):
 		user = await link_author(client, event.sender_id)
 
 		await msg.send(
-			message=f'Пользователь {user} удалил ключевое слово \"<code>{removed}</code>\"',
+			message=f'✅ Пользователь {user} удалил ключевое слово \"<code>{removed}</code>\"',
 			link_preview=False
 		)
 
 	except Exception as e:
-		await msg.send(message=f'Ошибка при удалении ключевого слова: {e}')
+		await msg.send(message=f'❌ Ошибка при удалении ключевого слова: {e}')

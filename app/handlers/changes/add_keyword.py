@@ -12,8 +12,10 @@ async def add_keyword_handler(client: TelegramClient, msg: Message, event):
         raw = event.pattern_match.group(1) if event.pattern_match else None
         if raw is None:
             await msg.send(
-                message=('Пожалуйста, укажите ключевое слово после команды.\n'
-                         'Пример: /add_keyword "слово"')
+                message=(
+                    '❗ Пожалуйста, укажите ключевое слово после команды. ❗\n\n'
+                    'Пример: <code>/add_keyword</code> "слово"'
+                )
             )
             return
 
@@ -27,8 +29,10 @@ async def add_keyword_handler(client: TelegramClient, msg: Message, event):
         # Проверка на пустое ключевое слово
         if keyword == "":
             await msg.send(
-                message=('Пожалуйста, укажите ключевое слово после команды.\n'
-                         'Пример: /add_keyword "слово"')
+                message=(
+                    '❗ Пожалуйста, укажите ключевое слово после команды. ❗\n\n'
+                    'Пример: <code>/add_keyword</code> "слово"'
+                )
             )
             return
 
@@ -40,7 +44,7 @@ async def add_keyword_handler(client: TelegramClient, msg: Message, event):
         for kw in keywords: # Проверка существующих ключевых слов
             if kw.lower() == lower:
                 await msg.send(
-                    message=f'Ключевое слово "{keyword}" уже существует.'
+                    message=f'ℹ️ Ключевое слово "{keyword}" уже существует.'
                 )
                 return
 
@@ -52,11 +56,11 @@ async def add_keyword_handler(client: TelegramClient, msg: Message, event):
         user = await link_author(client, event.sender_id) # Получение информации об авторе команды
 
         await msg.send(
-            message=f'Пользователь {user} добавил новое ключевое слово: "<code>{keyword}</code>"',
+            message=f'✅ Пользователь {user} добавил новое ключевое слово: "<code>{keyword}</code>"',
             link_preview=False
         )
 
     except Exception as e:
         await msg.send(
-            message=f'Ошибка при обработке команды /add_keyword: {e}'
+            message=f'❌ Ошибка при обработке команды /add_keyword: {e}'
         )
