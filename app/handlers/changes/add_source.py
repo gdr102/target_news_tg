@@ -86,7 +86,8 @@ async def add_source_handler(client: TelegramClient, msg: Message, event, dialog
                 # 2. Проверяем, существует ли уже источник с таким page_id
                 if page_id in data.get("sources", {}):
                     await msg.send(
-                        message=f'⚠ Этот источник Facebook (ID: {page_id}, <a href=\"{page_url}\">{page_title}</a>) уже добавлен.'
+                        message=f'⚠ Этот источник Facebook (ID: {page_id}, <a href=\"{page_url}\">{page_title}</a>) уже добавлен.',
+                        link_preview=False
                     )
                     return
                 
@@ -143,6 +144,7 @@ async def add_source_handler(client: TelegramClient, msg: Message, event, dialog
             else:
                 await client(JoinChannelRequest(f'@{norm}')) # Присоединение к каналу по username
                 entity = await client.get_entity(f'@{norm}') # Получение сущности канала
+                
         except Exception as e_join:
             await msg.send(
                 message=f'❌ Не удалось добавить источник ({source_link}): {e_join}'

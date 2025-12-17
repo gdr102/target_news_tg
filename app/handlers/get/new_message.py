@@ -5,6 +5,8 @@ from app.functions.other import link_msg_source
 async def new_message_hanlder(msg: Message, event):
     """ Обработчик входящих сообщений из каналов"""
 
+    topic = int(msg.topics.get('tg', ''))
+
     try:
         # Проверяем, что сообщения из канала
         if not hasattr(event.chat, 'broadcast') or not event.chat.broadcast:
@@ -33,11 +35,12 @@ async def new_message_hanlder(msg: Message, event):
 
                         # Сообщаем, что обнаружено ключевое слово
                         await msg.send(
-                            message=f'🟢 Обнаружено ключевое слово "<code>{keyword}</code>" в сообщении из канала "{event.chat.title}". Пересылаем сообщение...'
+                            message=f'🟢 Обнаружено ключевое слово "<code>{keyword}</code>" в сообщении из канала "{event.chat.title}". Пересылаем сообщение...',
+                            topic=topic
                         )
 
                         # Попытка прямого пересылания
-                        await msg.forward(message=message)
+                        await msg.forward(event=event, topic=topic)
 
                     # Если пересылка не удалась, обрабатываем ошибку
                     except Exception as e:
@@ -50,16 +53,20 @@ async def new_message_hanlder(msg: Message, event):
 
                                 # Отправляем только текст
                                 await msg.send(
-                                    message=f'{message.message}\n\nИсточник: {source} (запрет на копирование контента)' or ''
+                                    message=(f'<b>{event.chat.title}</b>\n\n'
+                                             f'<blockquote expandable>{message.message}</blockquote>\n\n'
+                                             f'Источник: {source} (запрет на копирование контента)' or ''),
+
+                                    topic=topic
                                 )
 
                             except Exception as e2: # Ошибка при отправке копии сообщения
-                                await msg.send(message=f'❌ Ошибка при отправке копии сообщения: {e2}')
+                                await msg.send(message=f'❌ Ошибка при отправке копии сообщения: {e2}', topic=topic)
 
                         else: # Общая ошибка пересылки
-                            await msg.send(message=f'❌ Ошибка при пересылке сообщения: {e}')
+                            await msg.send(message=f'❌ Ошибка при пересылке сообщения: {e}', topic=topic)
 
                     break # Прерываем цикл после первого совпадения
 
     except Exception as e:
-        await msg.send(message=f'❌ Ошибка при обработке сообщения: {e}')
+        await msg.send(message=f'❌ Ошибка при обработке сообщения: {e}', topic=topic)

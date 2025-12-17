@@ -1,11 +1,13 @@
 from telethon import TelegramClient
+from telethon.functions import messages
 
 class Message():
-    def __init__(self, client: TelegramClient, target_channel_id: int):
+    def __init__(self, client: TelegramClient, target_channel_id: int, topics: list):
         self.client = client
+        self.topics = topics
         self.target_channel_id = target_channel_id
 
-    async def send(self, message: str, only_log: bool = False, link_preview: bool = True):
+    async def send(self, message: str, only_log: bool = False, link_preview: bool = True, topic = None):
         """ Функция для отправки сообщений в целевой канал """
 
         print(f'Отправка сообщения в канал {self.target_channel_id}...'
@@ -17,17 +19,23 @@ class Message():
                 entity=self.target_channel_id,
                 message=message,
                 parse_mode='html',
-                link_preview=link_preview
+                link_preview=link_preview,
+                reply_to=topic
             )
     
-    async def forward(self, message):
+    async def forward(self, event, topic):
         """ Функция для пересылки сообщений в целевой канал """
 
-        await self.client.forward_messages(
-            entity=self.target_channel_id,
-            messages=message
-        )
-    
+        message_id = event.id
+        source_chat = event.chat_id
+
+        await self.client(messages.ForwardMessagesRequest(
+            from_peer=source_chat, 
+            id=[message_id], 
+            to_peer=self.target_channel_id, 
+            top_msg_id=topic,
+        ))
+
     async def delete(self, message):
         """ Функция для удаления сообщения в целевом канале """
 

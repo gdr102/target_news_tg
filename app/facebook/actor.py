@@ -1,4 +1,5 @@
 import pytz
+import asyncio
 
 from typing import Dict
 from apify_client import ApifyClient
@@ -9,12 +10,13 @@ from app.functions.read_json import read_json
 from app.functions.write_json import write_json
 
 class Actor():
-    def __init__(self, api_token: str, msg: Message, interval: int = 3600):
+    def __init__(self, api_token: str, msg: Message, topics: Dict, interval: int = 3600):
         self.client = ApifyClient(api_token)
         self.msg = msg
         self.posts = {}
         self.maxPosts = 1
         self.sources = None
+        self.topics = topics
         self.interval = interval
 
     # запуск
@@ -81,6 +83,8 @@ class Actor():
         return run_input
 
     async def handle_posts(self, posts: Dict) -> str:
+        topic = int(self.topics.get('fb', ''))
+
         # Читаем существующие посты из JSON
         data_posts = await read_json(file_path='app/storage/posts.json')
         existing_posts = data_posts.get('posts', {})
@@ -168,8 +172,11 @@ class Actor():
                     f'<b>{source_title}</b>\n\n'
                     f'Оригинальный пост: <a href="{post_url}">link</a> — <i>{creation_date}</i>\n\n'
                     f'<blockquote expandable>{text}</blockquote>\n\n'
-                    f'Источник: <a href="https://facebook.com/{source_url}">{source_title}</a>'
+                    f'Источник: <a href="https://facebook.com/{source_url}">{source_title}</a>',
+                    topic=topic
                 )
+
+                asyncio.sleep(2)
                 
                 # Обновляем информацию о посте в базе
                 existing_posts[post_id] = {
@@ -226,7 +233,7 @@ class Actor():
             f"• Следующая проверка в <code>{next_check_str}</code>"
         )
         
-        await self.msg.send(message=stats_message)
+        await self.msg.send(message=stats_message, topic=topic)
 
     async def get_info_page(self, url):
         run_input = {

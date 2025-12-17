@@ -14,10 +14,12 @@ from app.handlers.changes.add_keyword import add_keyword_handler
 from app.handlers.changes.remove_keyword import remove_keyword_handler
 
 from app.handlers.other.help import help_handler
+from app.functions.other import check_message_topic
 
 async def core_handler(client: TelegramClient, events, msg: Message, actor: Actor):
     """Основной обработчик"""
-
+    
+    topics = msg.topics
     target_channel_id = msg.target_channel_id  # Получение целевого канала из объекта Message
 
     # Обработчик входящих сообщений
@@ -28,53 +30,75 @@ async def core_handler(client: TelegramClient, events, msg: Message, actor: Acto
     # Обработчик команды /sources для получения всех каналов
     @client.on(events.NewMessage(chats=target_channel_id, pattern='/sources'))
     async def handle_sources_command(event):
-        dialogs = await client.get_dialogs() # Получаем все диалоги
+        check_topic = await check_message_topic(event=event, msg=msg) # проверяем, с какой темы поступила команда
 
-        await get_sources_handler(msg, dialogs) # вызов обработчика
-        await msg.delete(event.message)  # удаление сообщения команды
+        if check_topic:
+            dialogs = await client.get_dialogs() # Получаем все диалоги
+
+            await get_sources_handler(msg, dialogs) # вызов обработчика
+        
+            await msg.delete(event.message)  # удаление сообщения команды
 
     # Обработчик команды /add_source для добавления нового источника
     @client.on(events.NewMessage(chats=target_channel_id, pattern='/add_source (.*)'))
     async def handle_add_source_command(event):
-        dialogs = await client.get_dialogs() # Получаем все диалоги
+        check_topic = await check_message_topic(event=event, msg=msg) # проверяем, с какой темы поступила команда
 
-        await add_source_handler(client, msg, event, dialogs, actor)
-        await msg.delete(event.message)  # удаление сообщения команды
+        if check_topic:
+            dialogs = await client.get_dialogs() # Получаем все диалоги
+
+            await add_source_handler(client, msg, event, dialogs, actor)
+            await msg.delete(event.message)  # удаление сообщения команды
     
     # Обработчик команды /remove_source для удаления источника
     @client.on(events.NewMessage(chats=target_channel_id, pattern='/remove_source (.*)'))
     async def handle_remove_source_command(event):
-        dialogs = await client.get_dialogs() # Получаем все диалоги
+        check_topic = await check_message_topic(event=event, msg=msg) # проверяем, с какой темы поступила команда
 
-        await remove_source_handler(client, msg, event, dialogs)
-        await msg.delete(event.message)  # удаление сообщения команды
+        if check_topic:
+            dialogs = await client.get_dialogs() # Получаем все диалоги
+
+            await remove_source_handler(client, msg, event, dialogs)
+            await msg.delete(event.message)  # удаление сообщения команды
 
     # Обработчик команды /keywords для получения всех ключевых слов
     @client.on(events.NewMessage(chats=target_channel_id, pattern='/keywords'))
     async def handle_keywords_command(event):
-        await get_keywords_handler(msg)
-        await msg.delete(event.message)  # удаление сообщения команды
+        check_topic = await check_message_topic(event=event, msg=msg) # проверяем, с какой темы поступила команда
+
+        if check_topic:
+            await get_keywords_handler(msg)
+            await msg.delete(event.message)  # удаление сообщения команды
 
     # Обработчик команды /add_keyword для добавления нового ключевого слова
     @client.on(events.NewMessage(chats=target_channel_id, pattern='/add_keyword "(.*)"'))
     async def handle_add_keyword_command(event):
-        await add_keyword_handler(client, msg, event)
-        await msg.delete(event.message)  # удаление сообщения команды
+        check_topic = await check_message_topic(event=event, msg=msg) # проверяем, с какой темы поступила команда
+
+        if check_topic:
+            await add_keyword_handler(client, msg, event)
+            await msg.delete(event.message)  # удаление сообщения команды
 
     # Обработчик команды /remove_keyword для удаления ключевого слова
     @client.on(events.NewMessage(chats=target_channel_id, pattern='/remove_keyword "(.*)"'))
     async def handle_remove_keyword_command(event):
-        await remove_keyword_handler(client, msg, event)
-        await msg.delete(event.message)  # удаление сообщения команды
+        check_topic = await check_message_topic(event=event, msg=msg) # проверяем, с какой темы поступила команда
+
+        if check_topic:
+            await remove_keyword_handler(client, msg, event)
+            await msg.delete(event.message)  # удаление сообщения команды
 
     # Обработчик команды /check_fb для принудительной проверки источников фейсбук
     @client.on(events.NewMessage(chats=target_channel_id, pattern='/check_fb'))
     async def handle_check_fb_command(event):
-        await msg.send(message='ℹ️ <b>Запускаю проверку Facebook источников...</b>')
+        check_topic = await check_message_topic(event=event, msg=msg) # проверяем, с какой темы поступила команда
 
-        await actor.run()
-        
-        await msg.delete(event.message)  # удаление сообщения команды
+        if check_topic:
+            await msg.send(message='ℹ️ <b>Запускаю проверку Facebook источников...</b>', topic=int(topics.get('fb', '')))
+
+            await actor.run()
+            
+            await msg.delete(event.message)  # удаление сообщения команды
 
     # Обработчик команды /help для отображения справочной информации
     @client.on(events.NewMessage(chats=target_channel_id, pattern='/help'))
