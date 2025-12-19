@@ -27,7 +27,7 @@ class Actor():
 
     # Парсинг постов
     async def facebook_scraper(self, run_input) -> Dict:
-        run = self.client.actor("axesso_data/facebook-posts-scraper").call(run_input=run_input)
+        run = self.client.actor('scraper_one/facebook-posts-scraper').call(run_input=run_input)
 
         dataset = self.client.dataset(run["defaultDatasetId"])
 
@@ -35,13 +35,12 @@ class Actor():
             postId = item.get('postId', '')
 
             postData = {
-                'text': item.get('text', ''),
+                'text': item.get('postText', ''),
                 'page_id': item.get('pageId', ''),
-                'post_url': item.get('postUrl', ''),
-                'creation_date': item.get('creationDate', '')
+                'post_url': item.get('url', '')
             }
             
-            self.posts[postId] = postData # {"postId": {"text": "text text text", "page_id": "61553769081208", "post_url": "https://link.link/postId", "creation_date": "12.12.2025 10.00"}}
+            self.posts[postId] = postData # {"postId": {"text": "text text text", "page_id": "61553769081208", "post_url": "https://link.link/postId"}}
 
         return self.posts
     
@@ -73,12 +72,10 @@ class Actor():
                 # Стандартные страницы с username
                 fb_url = f'https://www.facebook.com/{url}'
 
-            input_data.append({
-                "url": fb_url,
-                "maxPosts": self.maxPosts
-            })
+            input_data.append(fb_url)
 
-        run_input["input"] = input_data
+        run_input["pageUrls"] = input_data
+        run_input["resultsLimit"] = self.maxPosts
 
         return run_input
 
@@ -103,7 +100,6 @@ class Actor():
             text = post_data.get('text', '')
             page_id = post_data.get('page_id', '')
             post_url = post_data.get('post_url', '')
-            creation_date = post_data.get('creation_date', '')
             
             # Получаем информацию об источнике
             source = self.sources.get(page_id)
@@ -170,7 +166,7 @@ class Actor():
                 await self.msg.send(message = 
                     f'🟢 Обнаружено ключевое слово "<code>{found_keyword}</code>"\n\n'
                     f'<b>{source_title}</b>\n\n'
-                    f'Оригинальный пост: <a href="{post_url}">link</a> — <i>{creation_date}</i>\n\n'
+                    f'Оригинальный пост: <a href="{post_url}">link</a>\n\n'
                     f'<blockquote expandable>{text}</blockquote>\n\n'
                     f'Источник: <a href="https://facebook.com/{source_url}">{source_title}</a>',
                     topic=topic
@@ -182,7 +178,6 @@ class Actor():
                 existing_posts[post_id] = {
                     'keyword': found_keyword,
                     'sourceTitle': source_title,
-                    'creationDate': creation_date,
                     'postUrl': post_url,
                     'is_send': 1,  # Помечаем как отправленный
                     'no_keyword': 0  # Сбрасываем флаг отсутствия ключевого слова
@@ -204,7 +199,6 @@ class Actor():
                     existing_posts[post_id] = {
                         'keyword': '',
                         'sourceTitle': source_title,
-                        'creationDate': creation_date,
                         'postUrl': post_url,
                         'is_send': 0,  # Не отправлен
                         'no_keyword': 1  # Нет ключевых слов

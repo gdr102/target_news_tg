@@ -80,7 +80,7 @@ async def main():
     asyncio.create_task(start_periodic_check())
 
     # клиент будет работать пока не будет остановлен вручную
-    await client.run_until_disconnected()
+    # await client.run_until_disconnected()
 
 if __name__ == '__main__':
     try:
